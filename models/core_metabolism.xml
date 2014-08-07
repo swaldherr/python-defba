@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model id="metabogen" name="metabogen">
+    <notes>
+      <body xmlns="http://www.w3.org/1999/xhtml">
+        <p> Originally created by libAntimony v1.3 (using libSBML 3.4.1) </p>
+      </body>
+    </notes>
+    <listOfCompartments>
+      <compartment id="default_compartment" size="1" sboTerm="SBO:0000410"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="Carb1" compartment="default_compartment" initialConcentration="5"/>
+      <species id="Carb2" compartment="default_compartment" initialConcentration="0"/>
+      <species id="O2ext" compartment="default_compartment" initialConcentration="20"/>
+      <species id="Dext" compartment="default_compartment" initialConcentration="0"/>
+      <species id="Eext" compartment="default_compartment" initialConcentration="0"/>
+      <species id="Fext" compartment="default_compartment" initialConcentration="0"/>
+      <species id="Hext" compartment="default_compartment" initialConcentration="0"/>
+      <species id="A" compartment="default_compartment" initialConcentration="0"/>
+      <species id="B" compartment="default_compartment" initialConcentration="0"/>
+      <species id="C" compartment="default_compartment" initialConcentration="0"/>
+      <species id="D" compartment="default_compartment" initialConcentration="0"/>
+      <species id="E" compartment="default_compartment" initialConcentration="0"/>
+      <species id="F" compartment="default_compartment" initialConcentration="0"/>
+      <species id="G" compartment="default_compartment" initialConcentration="0"/>
+      <species id="H" compartment="default_compartment" initialConcentration="0"/>
+      <species id="ATP" compartment="default_compartment" initialConcentration="0"/>
+      <species id="NADH" compartment="default_compartment" initialConcentration="0"/>
+      <species id="O2" compartment="default_compartment" initialConcentration="0"/>
+      <species id="ETc1" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ETc2" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ETf" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ETh" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER1" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER2" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER3" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER4" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER5" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER6" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER7" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ER8" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="ERres" compartment="default_compartment" initialConcentration="1e-05"/>
+      <species id="R" compartment="default_compartment" initialConcentration="1e-06"/>
+      <species id="S" compartment="default_compartment" initialConcentration="0.001"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="ETO2" value="1e-05"/>
+      <parameter id="ETd" value="1e-05"/>
+      <parameter id="ETe" value="1e-05"/>
+      <parameter id="vO2" value="20"/>
+      <parameter id="muO2" value="0.4"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="Tc1">
+        <listOfReactants>
+          <speciesReference species="Carb1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 3000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="Tc2">
+        <listOfReactants>
+          <speciesReference species="Carb2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="Tf">
+        <listOfReactants>
+          <speciesReference species="Fext"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="F"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 3000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="DO2">
+        <listOfReactants>
+          <speciesReference species="O2ext"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="O2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="Dd">
+        <listOfReactants>
+          <speciesReference species="D"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Dext"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="De">
+        <listOfReactants>
+          <speciesReference species="E"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Eext"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="Th">
+        <listOfReactants>
+          <speciesReference species="Hext"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="H"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 3000 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R1">
+        <listOfReactants>
+          <speciesReference species="A"/>
+          <speciesReference species="ATP"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="B"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R2">
+        <listOfReactants>
+          <speciesReference species="B"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="C"/>
+          <speciesReference species="ATP" stoichiometry="2"/>
+          <speciesReference species="NADH" stoichiometry="2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R3">
+        <listOfReactants>
+          <speciesReference species="B"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="F"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R4">
+        <listOfReactants>
+          <speciesReference species="C"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="G"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R5">
+        <listOfReactants>
+          <speciesReference species="G"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="C" stoichiometry="0.8"/>
+          <speciesReference species="NADH" stoichiometry="2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R6">
+        <listOfReactants>
+          <speciesReference species="C"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ATP" stoichiometry="2"/>
+          <speciesReference species="D" stoichiometry="3"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R7">
+        <listOfReactants>
+          <speciesReference species="C"/>
+          <speciesReference species="NADH" stoichiometry="4"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="E" stoichiometry="3"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R8">
+        <listOfReactants>
+          <speciesReference species="G"/>
+          <speciesReference species="ATP"/>
+          <speciesReference species="NADH" stoichiometry="2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="H"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="Rres">
+        <listOfReactants>
+          <speciesReference species="NADH"/>
+          <speciesReference species="O2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ATP"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1800 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PTc1">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="400"/>
+          <speciesReference species="ATP" stoichiometry="1600"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ETc1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 2.5 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PTc2">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="1500"/>
+          <speciesReference species="ATP" stoichiometry="6000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ETc2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 0.67 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PTf">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="400"/>
+          <speciesReference species="ATP" stoichiometry="1600"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ETf"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 2.5 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PTh">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="400"/>
+          <speciesReference species="ATP" stoichiometry="1600"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ETh"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 2.5 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR1">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="500"/>
+          <speciesReference species="ATP" stoichiometry="2000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR2">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="500"/>
+          <speciesReference species="ATP" stoichiometry="2000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR3">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="2000"/>
+          <speciesReference species="ATP" stoichiometry="8000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER3"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 0.5 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR4">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="500"/>
+          <speciesReference species="ATP" stoichiometry="2000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER4"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR5">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="500"/>
+          <speciesReference species="ATP" stoichiometry="2000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER5"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR6">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="1000"/>
+          <speciesReference species="ATP" stoichiometry="4000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER6"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR7">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="1000"/>
+          <speciesReference species="ATP" stoichiometry="4000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER7"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 1 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR8">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="4000"/>
+          <speciesReference species="ATP" stoichiometry="16000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ER8"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 0.25 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PRres">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="500"/>
+          <speciesReference species="ATP" stoichiometry="2000"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ERres"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PR">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="4500"/>
+          <speciesReference species="ATP" stoichiometry="21000"/>
+          <speciesReference species="C" stoichiometry="1500"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="R"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn> 0.2 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="PS">
+        <listOfReactants>
+          <speciesReference species="H" stoichiometry="250"/>
+          <speciesReference species="C" stoichiometry="250"/>
+          <speciesReference species="F" stoichiometry="250"/>
+          <speciesReference species="ATP" stoichiometry="1500"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="S"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <cn type="integer"> 3 </cn>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vO">
+        <listOfProducts>
+          <speciesReference species="O2ext"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <minus/>
+              <ci> vO2 </ci>
+              <apply>
+                <times/>
+                <ci> muO2 </ci>
+                <ci> O2ext </ci>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

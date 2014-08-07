@@ -1,0 +1,101 @@
+model metabogen
+
+// Parameter estimates
+// Published data
+// Scott et al. 2010 translational rate 20 aa/sec
+// Klumpp et al. 2009 E. coli doubling time 20 min to several hours
+// enzyme kcat ranges from 4.7 1/s (280 1/min) to 80000 1/min (Milo et al. 2010)
+// transporter kcat 53 - 240 1/s for Glucose transporters BNID 101629, 101738
+// translation rate 10 - 20 aa/s
+// average protein length 300 aa (Brocchieri and Karlin 2005)
+
+// time in minutes
+
+// extracellular metabolites
+Carb1 = 5
+Carb2 = 0
+O2ext = 20
+Dext = 0
+Eext = 0
+Fext = 0
+Hext = 0
+
+// intracellular metabolites
+A = 0
+B = 0
+C = 0
+D = 0
+E = 0
+F = 0
+G = 0
+H = 0
+ATP = 0
+NADH = 0
+O2 = 0
+
+// enzymes
+ETc1 = 1e-5
+ETc2 = 1e-5
+ETf = 1e-5
+ETO2 = 1e-5
+ETh = 1e-5
+ETd = 1e-5
+ETe = 1e-5
+ER1 = 1e-5
+ER2 = 1e-5
+ER3 = 1e-5
+ER4 = 1e-5
+ER5 = 1e-5
+ER6 = 1e-5
+ER7 = 1e-5
+ER8 = 1e-5
+ERres = 1e-5
+
+// ribosome
+R = 1e-6
+// structure
+S = 0.001
+
+// exchange reactions
+Tc1: Carb1 -> A; 3000;
+Tc2: Carb2 -> A; 2000;  // Carb1 is the preferred carbon source
+Tf: Fext -> F; 3000;
+DO2: O2ext -> O2; 1000;
+Dd: D -> Dext; 1000;
+De: E -> Eext; 1000;
+Th: Hext -> H; 3000;
+
+// metabolic reactions
+R1: A + ATP -> B; 1800;
+R2: B -> C + 2 ATP + 2 NADH; 1800; // reversible // 2 or 3 NADH?
+R3: B -> F; 1800;
+R4: C -> G; 1800;
+R5: G -> 0.8 C + 2 NADH; 1800;
+R6: C -> 2 ATP + 3 D; 1800; // reversible
+R7: C + 4 NADH -> 3 E; 1800; // reversible
+R8: G + ATP + 2 NADH -> H; 1800; // reversible
+Rres: NADH + O2 -> ATP; 1800;
+
+// biomass reactions
+PTc1: 400 H + 1600 ATP -> ETc1; 2.5;
+PTc2: 1500 H + 6000 ATP -> ETc2; 0.67;  // Carb1 is the preferred carbon source
+PTf: 400 H + 1600 ATP -> ETf; 2.5;
+PTh: 400 H + 1600 ATP -> ETh; 2.5;
+PR1: 500 H + 2000 ATP -> ER1; 2;
+PR2: 500 H + 2000 ATP -> ER2; 2;
+PR3: 2000 H + 8000 ATP -> ER3; 0.5;
+PR4: 500 H + 2000 ATP -> ER4; 2;
+PR5: 500 H + 2000 ATP -> ER5; 2;
+PR6: 1000 H + 4000 ATP -> ER6; 1;
+PR7: 1000 H + 4000 ATP -> ER7; 1;
+PR8: 4000 H + 16000 ATP -> ER8; 0.25;
+PRres: 500 H + 2000 ATP -> ERres; 2;
+PR: 4500 H + 21000 ATP + 1500 C -> R; 0.2;
+PS: 250 H + 250 C + 250 F + 1500 ATP -> S; 3;
+
+// external reactions, depending on scenario
+vO2 = 20
+muO2 = 0.4
+vO: -> O2ext; vO2 - muO2*O2ext;
+
+end;
