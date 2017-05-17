@@ -21,6 +21,12 @@ For some of the computations, the glpk package from
 
 may be required.
 
+In order to use the automated task interface, you need to use the scripttool package from
+
+    https://github.com/swaldherr/python-scripttool
+
+This can be installed into the Python environment, or you can simply put the scripttool package into this folder.
+
 Execution
 ---------
 
