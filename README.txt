@@ -1,4 +1,4 @@
-How to use this code!!
+How to use this code
 ====================
 
 Preliminaries
