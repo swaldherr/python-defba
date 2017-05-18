@@ -1,0 +1,685 @@
+\documentclass[a4paper,11pt,DIV12]{scrartcl}
+\usepackage[latin1]{inputenc}
+% \usepackage[T3]{fontenc}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage[english]{babel}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{calc}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assum}{Assumption}
+\theoremstyle{remark}
+\newtheorem{open}{Open problem}
+
+\usepackage{mathtricks}
+
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\Prob}{\mathrm{Prob}}
+
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+
+\renewcommand{\floatpagefraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+
+\newcommand{\mrm}[1]{\mathrm{#1}}
+\newcommand{\e}[1]{\cdot 10^{#1}}
+\renewcommand{\matrix}[1]{\begin{pmatrix}#1\end{pmatrix}}
+
+%opening
+\title{Dynamic flux optimization in metabolic-genetic networks}
+\author{Steffen Waldherr}
+\date{17th May 2013}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\clearpage
+
+% \section{Introduction}
+% \label{sec:introduction}
+
+
+% \subsection*{Notation}
+
+
+\section{A coupled metabolic-genetic reaction network}
+\label{sec:coupl-metab-genet}
+
+We consider the following molecular species:
+\begin{itemize}
+\item Extracellular nutrients and / or waste $Y \in \Real^{n_y}$
+\item Intracellular metabolites $X \in \Real^{n_x}$
+\item Gene products $P \in \Real^{n_p}$
+\end{itemize}
+
+The following reactions are considered:
+\begin{itemize}
+\item Exchange reactions $V_y \in \Real^{n_{vy}}$ between the cell and the environment
+\item Metabolic reactions $V_x \in \Real^{n_{vx}}$ converting one set of metabolites into another
+\item Gene expression reactions $V_p \in \Real^{n_{vp}}$ generating gene products from metabolites
+\end{itemize}
+
+The network dynamics are then given by the following differential equation:
+\begin{equation}
+  \label{eq:metabolic-genetic-network}
+  \begin{aligned}
+    \dot Y &= - S^y_y V_y \\
+    \dot X &= S^x_y V_y + S^x_x V_x - S^x_p V_p \\
+    \dot P &= S^p_p V_p,
+  \end{aligned}
+\end{equation}
+where the $S^\ast_\ast$ are the reaction stoichiometries.
+
+From a time scale separation, we can argue that the metabolic part $X$ of the network is in a quasi-steady state.
+This leads to the following simplified network:
+\begin{equation}
+  \label{eq:reduced-metabolic-genetic-network}
+  \begin{aligned}
+    \dot Y &= - S^y_y V_y \\
+    \dot P &= S^p_p V_p,
+  \end{aligned}
+\end{equation}
+with the metabolic flux balance constraint
+\begin{equation}
+  \label{eq:fbc}
+  S^x_y V_y + S^x_x V_x - S^x_p V_p = 0.
+\end{equation}
+
+Since there are typically large difference in the molar mass' order of magnitude for metabolites versus macromolecules, it is helpful for numerical reasons to scale the system accordingly.
+We consider a scaling parameter $\alpha$, which is an overall value for the ratio of the macromolecules' molar mass over the the metabolites' molar mass, or, equivalently, the stoichiometry of metabolites in the reactions generating macromolecules.
+The proposed scaling is
+\begin{equation}
+  \label{eq:scaling-with-alpha}
+  \begin{aligned}
+    \tilde P &= \alpha P \\
+    \tilde V_p &= \alpha V_p.
+  \end{aligned}
+\end{equation}
+At this point, we observe that the scaling changes the quasi-steady state constraint \eqref{eq:fbc} to
+\begin{equation}
+  \label{eq:fbc-scaled}
+  S^x_y V_y + S^x_x V_x - \alpha^{-1} S^x_p \tilde V_p = 0.
+\end{equation}
+
+\section{A dynamic optimization problem for a metabolic-genetic network}
+\label{sec:dynam-optim-probl}
+
+\subsection{Derivation of a generic optimization problem}
+\label{sec:deriv-gener-optim}
+
+For notational convenience, we introduce the scaled molar mass vector $z = (Y, \tilde P)$ and the scaled flux vector $v = (V_y, V_x, \tilde V_p)$.
+Define $n_v = n_{vy} + n_{vy} + n_{vy}$.
+
+Apart from the flux balance constraint, there will typically be additional constraints on the fluxes, macromolecules, and extracellular components.
+\begin{itemize}
+\item Enzyme capacity constraints.
+  Generally, reaction fluxes are limited by upper and lower bounds of the form
+  \begin{equation*}
+    \vert\frac{v_1}{c_1}\vert + \dotsb + \vert\frac{v_m}{c_m}\vert \leq E,
+  \end{equation*}
+  where $E$ is the amount of available enzyme, $v_1$ to $v_m$ are the reactions catalyzed by this enzyme, and $c_1$ to $c_m$ are the catalytic constants for these reactions.
+  On the network level, this translates to the constraints
+  \begin{equation}
+    \label{eq:enzyme-constraint}
+    H_{C,y} V_y + H_{C,x} V_x + H_{C,p} V_p \leq H_E P,
+  \end{equation}
+  where $H_E \in \Real^{q_E \times n_p}$ selects the enzymatic components of the macromolecule vector $P$ and $H_{C,\cdot} \in \Real^{q_E \times n_v}$ contains the inverse of the catalytic constants for the corresponding fluxes.
+  The scaled variant of this constraint is given by
+  \begin{equation}
+    \label{eq:enzyme-constraint-scaled}
+    \alpha H_{C,y} V_y + \alpha H_{C,x} V_x + H_{C,p} \tilde V_p \leq H_E \tilde P,
+  \end{equation}
+  which we will also write shortly as $\tilde H_{C} v \leq H_E \tilde P$.
+  $q_E = \sum_{i=1}^K 2^{k_i}$, where $K$ is the number of enzymes and $k_i$ the number of reactions catalyzed by enzyme $i$.
+\item Biomass-independent flux bounds, for example positivity of irreversible fluxes.
+  \begin{equation}
+    \label{eq:flux-bounds}
+    v_{min} \leq v \leq v_{max}.
+  \end{equation}
+  Components of $v_{min}$ and $v_{max}$ where no bound is set may by chosen as $\pm \infty$.
+\item Positivity of molecular species.
+  \begin{equation}
+    \label{eq:positive-concentrations}
+    z \geq 0.
+  \end{equation}
+\item A set of biomass composition constraints.
+  For example, the amount of structural cell components will put an upper bound on the feasible enzyme amount.
+  \begin{equation}
+    \label{eq:bm-constraint}
+    H_B \tilde P \leq h_B,
+  \end{equation}
+  where $H_B \in \Real^{q_B \times n_p}$ and $h_B \in \Real^{q_B}$, with $q_B$ the number of biomass composition constraints.
+\end{itemize}
+
+In terms of dynamic optimization, the constraints given above are \emph{path constraints}, i.e., they are required to hold at any single time point during the considered time interval.
+
+Let $\mathcal Z$ be a set of desired molecular species amount, and define the set of all dynamic fluxes that take the network to the desired set at time $t_f$ as
+\begin{equation}
+  \label{eq:admissible-fluxes}
+  \mathcal V(\mathcal Z,z_0) = \bigcup_{t_f \geq 0} \{ v \in \mathcal{M}[0,t_f] \mid z(t_f,v,z_0) \in \mathcal Z \},
+\end{equation}
+where $\mathcal M[0,t_f]$ is the set of measurable functions of appropriate dimension over the interval $[0,t_f]$, and $z(t_f,v,z_0)$ is the solution of the differential equation~\eqref{eq:reduced-metabolic-genetic-network} with flux variables $v(t)$ and initial condition $z(0) = z_0$.
+
+Given a cost functional with integral term and endpoint term, we obtain the following dynamic optimization problem:
+\begin{equation}
+  \label{eq:metabolic-opt-problem}
+  \begin{aligned}
+    \max_{\mathcal V(\mathcal Z, z_0)} &\ \int_{0}^{t_f} \Phi(z(t),v(t)) dt + \Psi(z(t_f)) \\
+    \textnormal{s.t. } & \dot Y = - S^y_y V_y \\
+    & \dot{\tilde P} = S^p_p \tilde V_p \\
+    & z(0) = z_0 \\
+    & S^x_y V_y + S^x_x V_x - \alpha^{-1} S^x_p \tilde V_p = 0 \\
+    & \tilde H_C v(t) \leq H_E P(t) \\
+    & v_{min} \leq v(t) \leq v_{max} \\
+    & z(t) \geq 0 \\
+    & H_B \tilde P(t) \leq h_B.
+  \end{aligned}
+\end{equation}
+
+Let us define $S = (S^x_y, \ S^x_v, \ -\alpha^{-1} S^x_p) \in \Real^{n_x \times n_v}$.
+The flux balance constraint is then written as $S v = 0$.
+We aim to reduce the number of optimization variables by explicitly solving for this constraint.
+Let $r \leq \min(n_x, n_v)$ be the rank of $S$.
+Using singular value decomposition (SVD), $S$ can be decomposed as
+\begin{equation}
+  \label{eq:stoich-svd}
+  S = S_r W\T,
+\end{equation}
+with a full rank matrix $S_r \in \Real^{n_x \times r}$ and a matrix $W \in \Real^{n_v \times r}$ which satisfies
+\begin{equation}
+  \label{eq:svd-projection}
+  W\T W = I_r.
+\end{equation}
+Also from SVD, we get a matrix $M \in \Real^{n_v \times (n_v - r)}$ which satisfies
+\begin{equation}
+  \label{eq:svd-zero}
+  W\T M = 0.
+\end{equation}
+We now substitute the optimization variable $v(t)$ by
+\begin{equation}
+  \label{eq:v-substitution}
+  v(t) = W w(t) + M u(t),
+\end{equation}
+where $w(t) \in \Real^{r}$ and $u(t) \in \Real^{n_v - r}$.
+The flux balance constraint now becomes
+\begin{equation}
+  \label{eq:fbc-revised}
+  S v = S_r w = 0.
+\end{equation}
+Since $S_r$ is full rank, this implies $w = 0$, and both the flux balance constraint and the variable $w$ can be removed from the optimization problem.
+
+With this reduction, and by summarizing some constraints in~\eqref{eq:metabolic-opt-problem}, we arrive at the following general dynamic optimization problem to be solved.
+\begin{equation}
+  \label{eq:generic-opt-problem}
+  \begin{aligned}
+    \max_{\mathcal U(\mathcal Z,z_0)} &\ \int_{0}^{t_f} \Phi(z(t),u(t)) dt + \Psi(z(t_f)) \\
+    \textnormal{s.t. } & \dot z = B u \\
+    & z(0) = z_0 \\
+    & G_1 z(t) \leq g_1 \\
+    & G_2 u(t) \leq G_3 z(t) + g_2,
+  \end{aligned}
+\end{equation}
+where
+\begin{equation}
+  \label{eq:opt-constraints}
+  \begin{aligned}
+    G_1 &= \matrix{-I_{n_z} \\ (0, H_B)}   &  g_1 &= \matrix{0\\h_B} \\    
+    G_2 &= \matrix{-I_{n_u} \\ I_{n_u} \\ \tilde H_C M}              &  g_2 &= \matrix{-v_{min}\\v_{max}\\0} \\
+    G_3 &= \matrix{0 \\ 0 \\ H_E}            &
+  \end{aligned}
+\end{equation}
+and
+\begin{equation}
+  \label{eq:valid-input-set}
+  \mathcal U(\mathcal Z, z_0) = \{ u \mid Mu \in \mathcal{V}(\mathcal Z, z_0) \}.
+\end{equation}
+
+\subsection{Maximum growth objective}
+\label{sec:maxim-growth-object}
+
+A commonly used biological objective functions for metabolic fluxes is to maximize the cell's growth.
+In the context developed here, the objective is to maximize the biomass at the endpoint of a given time interval, given the initial biomass distribution and nutrient availability.
+The objective is characterized mathematically by
+\begin{equation}
+  \label{eq:maxgrowth-phi-objective}
+  \Phi(z,u) = 0
+\end{equation}
+and
+\begin{equation}
+  \label{eq:maxgrowth-psi-objective}
+  \Psi(z_f) = b\T p(t_f),
+\end{equation}
+where $b \in \Real^{n_p}$ is a biomass weighting vector.
+
+\subsection{Time-optimal flux dynamics}
+\label{sec:time-optimal-flux}
+
+The other approach to maximize the growth rate is to minimize the time cells need to achieve a prespecified growth.
+In contrast to the previous approach with the maximum growth objective, the time-optimal approach requires to fix a non-trivial target set $\mathcal Z$.
+
+One approach could be to minimize the time needed to metabolize the nutrients available at the initial time point.
+In order to use such an approach, we have to determine a reachable target state where all nutrients are metabolized, which may be complicated by the accumulation of waste products, or only partial availability of some sources due to a lack of required co-metabolites.
+With a given initial nutrient availability characterized by $y(0)$, one reasonable method could be to first try to determine the maximum achievable biomass
+\begin{equation}
+  \label{eq:max-achievable-biomass}
+  \begin{aligned}
+    \beta^\ast &= \max_{z} &&\ b\T p \\
+    &\qquad\textnormal{s.t. } && G_c z = G_c z_0,
+  \end{aligned}
+\end{equation}
+where $G_c$ captures all conservation relations in the metabolic-genetic network.
+In~\eqref{eq:max-achievable-biomass}, we assume implicitly that the bounds on the fluxes are such that the corresponding target $z^\ast$ is reachable by the metabolic-genetic network.
+In general, the constraint that $z$ must be reachable from $z_0$ under the dynamics and constraints of the metabolic-genetic network should be added.
+Ways to check such a constraint need to be investigated.
+Given a solution to the optimization problem~\eqref{eq:max-achievable-biomass}, the target set can then be defined as
+\begin{equation}
+  \label{eq:time-optimal-targetset1}
+  \mathcal Z = \{ z \mid b\T p \geq \beta^\ast \}.
+\end{equation}
+
+An alternative approach would be to define a specific increase in biomass as the target set.
+Given a factor $\alpha > 1$, the target would be defined as
+\begin{equation}
+  \label{eq:time-optimal-targetset2}
+  \mathcal Z = \{ z \mid p \geq \alpha p(0) \},
+\end{equation}
+i.e., the all macromolecules will be increased by a factor of $\alpha$.
+
+For time-optimal dynamics, the objective function to be used is given by
+\begin{equation}
+  \label{eq:time-optimal-phi-objective}
+  \Phi(z,u) = -1
+\end{equation}
+and
+\begin{equation}
+  \label{eq:time-optimal-psi-objective}
+  \Psi(z_f) = 0.
+\end{equation}
+
+
+\section{Numerical solution of the constructed optimal control problem}
+\label{sec:numer-solut-constr}
+
+\subsection{Abstract problem formulation}
+\label{sec:abstr-probl-form}
+
+Based on the derivations in Section~\ref{sec:dynam-optim-probl}, we consider an optimal control problem given by
+\begin{equation}
+  \label{eq:abstract-oc-problem-fixedtime}
+  \begin{aligned}
+    \max_{\mathcal U} &\ \int_{0}^{t_f} (C(t) x(t) + D(t) u(t) + E(t)) dt + F x(t_f) \\
+    \textnormal{s.t. } & \dot x(t) = A(t) x(t) + B(t) u(t) + u_0(t) \\
+    & x(0) = x_0 \\
+    & G_x(t) x(t) + G_u(t) u(t) + G_k(t) \leq 0, \quad 0 \leq t \leq t_f \\
+    & H_x x(t_f) + H_k \leq 0 \\
+    & \int_{0}^{t_{f}} (\tilde C(t) x(t) + \tilde D(t) u(t) + \tilde E(t)) dt + \tilde F x(t_{f}) \leq 0
+  \end{aligned}
+\end{equation}
+with $x(t) \in \Real^n$, $u(t) \in \Real^m$, and the matrices in the objective and constraints of appropriate dimension.
+For vector constraints, the inequalities are understood to be element-wise.
+
+In this formulation, the final time $t_f$ is fixed, and the set of admissible controls $\mathcal U$ is the set of measurable functions on the interval $[0, t_f]$.
+
+\subsection{Discretization by collocation}
+\label{sec:appr-coll}
+
+The solution to the optimal control problem~\eqref{eq:abstract-oc-problem-fixedtime} is approximated by a collocation scheme.
+To this end, the time interval $[0,t_f]$ is divided into $N$ equally sized intervals, each of length
+\begin{equation}
+\label{eq:collocation-intervals}
+h = t_f / N.
+\end{equation}
+
+Within each interval, $K$ collocation points are considered, using Gauss, Gauss-Radau, or Gauss-Lobatto collocation.
+Overall, the collocation points are given by the sequence
+\begin{equation}
+  \label{eq:collocation-points}
+  t_{1,1}, t_{1,2}, \dotsc, t_{1,K}, t_{2,1}, \dotsc, t_{N,K}.
+\end{equation}
+Within each interval, the $q$-th collocation point is at position $r_q$ (relative to the interval $[-1,1]$), where $r_q$ is determined by the collocation scheme and order.
+The collocation points are thus computed as
+\begin{equation}
+  \label{eq:collocation-points-formula}
+  t_{i,q} = (i-1) h + (r_q + 1) h / 2.
+\end{equation}
+
+\subsubsection{Approximation of continuous variables}
+\label{sec:appr-syst-vari}
+
+The control and state derivative are discretized by the following interpolation scheme:
+\begin{equation}
+  \label{eq:variable-discretization}
+  \begin{aligned}
+    u(t) &= \sum_{q=1}^K u_{i,q} L_q(\frac{2 t - 2 t_{i-1} - h}{h}), \qquad t_{i-1} \leq t \leq t_i \\
+    \dot x(t) &= \sum_{q=1}^K \dot x_{i,q} L_q(\frac{2 t - 2 t_{i-1} - h}{h}), \qquad t_{i-1} \leq t \leq t_i,
+  \end{aligned}
+\end{equation}
+where $L_q$, $q=1,\ldots,K$ are suitable interpolation functions defined on the interval $(-1,1)$.
+The boundaries of the time intervals are given by $t_i = i h$, $i=1,\dotsc,N$ and $t_0 = 0$.
+
+The state variable $x$ is discretized at the boundaries of the $N$ intervals in time, and its value within an interval is approximated by integrating over the state derivatives:
+\begin{equation}
+  \label{eq:state-approx}
+  \begin{aligned}
+    x(t_{i-1} + \tau) &= x_{i-1} + \int_{0}^{\tau} \dot x(t_{i-1} + s) ds \\
+    &= x_{i-1} + \sum_{q=1}^K \dot x_{i,q} \int_0^\tau L_q(2s/h - 1) ds \\
+    &= x_{i-1} + h/2 \sum_{q=1}^K \dot x_{i,q} \int_{-1}^{r(\tau)} L_q(s) ds,
+  \end{aligned}
+\end{equation}
+with $r(\tau) = 2\tau/h - 1$.
+
+In the following, we will also denote
+\begin{equation}
+  \label{eq:L-integral}
+  Q_{q,p} = \int_{-1}^{r_q} L_p(s) ds,
+\end{equation}
+for $1 \leq p,q \leq K$.
+Then, the value of the state vector at a collocation point $t_{i,q}$ is approximated by
+\begin{equation}
+  \label{eq:state-approx-collocation}
+  x(t_{i,q}) = x_{i-1} + \frac{h}{2} (Q_q \otimes I_n) \dot x_i,
+\end{equation}
+where $\dot x_i = (\dot x_{i,1}, \dotsc, \dot x_{i,K})$, $Q_q = (Q_{q,1}, \dotsc, Q_{q,K})$ and $\otimes$ is the Kronecker product.
+
+\subsubsection{Summary of the discretization scheme}
+\label{sec:summ-discr-scheme}
+
+The continuous optimization problem~\eqref{eq:abstract-oc-problem-fixedtime} is approximated by a discrete problem in which the optimization is done over the vector $z \in \Real^{NK(n+m)+Nn}$, defined by
+\begin{equation}
+  \label{eq:discrete-optimization-vector}
+  z = (u_{1,1}, u_{1,2}, \dotsc, u_{N,K}, \dot x_{1,1}, \dot x_{1,2} \dotsc, \dot x_{N,K}, x_1, \dotsc, x_N),
+\end{equation}
+with $u_{i,q}$, $\dot x_{i,q}$, and $x_i$, $i=1,\dotsc,N$, $q=1,\dotsc,K$ corresponding to the interpolation coefficients in \eqref{eq:variable-discretization} and \eqref{eq:state-approx}.
+
+The discrete optimization problem is written as
+\begin{equation}
+  \label{eq:discrete-oc-problem-fixedtime}
+  \begin{aligned}
+    \max_{z} &\ c\T z + e \\
+    \textnormal{s.t. } & M_e z = V_e \\
+    & M_i z \leq V_i,
+  \end{aligned}
+\end{equation}
+where the vector $c$ and number $e$ stem from the discretization of the the objective functional, the equality constraint matrix $M_e$ and vector $V_e$ from collocation of the differential equation and the initial condition, and the inequality constraint matrix $M_i$ and vector $V_i$ from the path, terminal, and integral constraints in \eqref{eq:abstract-oc-problem-fixedtime}.
+The derivation of the optimization parameters in the problem~\eqref{eq:discrete-oc-problem-fixedtime} from the continuous problem is discussed in the next sections~\ref{sec:discr-object-funct}--\ref{sec:discr-path-constr}.
+
+In the following derivation of the discrete optimization problem, we will frequently denote
+\begin{equation}
+  u_i = (u_{i,1}, \dotsc, u_{i,K})
+\end{equation}
+and
+\begin{equation}
+  \dot x_i = (\dot x_{i,1}, \dotsc, \dot x_{i,K}).
+\end{equation}
+
+\subsubsection{Discretization of the objective functional}
+\label{sec:discr-object-funct}
+
+The objective functional $J(u,x,x_0) = \int_{0}^{t_f} (C(t) x(t) + D(t) u(t) + E(t)) dt + F x(t_f)$ is approximated by Gaussian quadrature as
+\begin{equation}
+  \label{eq:objective-gaussian-quadrature}
+  \begin{aligned}
+    J(u,x,x_0) &\approx \frac{h}{2} \sum_{i=1}^{N} \sum_{q=1}^{K} w_q \bigl(C(t_{i,q}) x(t_{i,q}) + D(t_{i,q}) u(t_{i,q}) + E(t_{i,q})\bigr) + F x(t_f),
+  \end{aligned}
+\end{equation}
+where $w_q$, $q=1,\dotsc,K$, are the weights of the Gaussian quadrature scheme.
+
+Let us consider some terms individually.
+First, we have
+\begin{equation}
+  \label{eq:objective-state}
+  \sum_{q=1}^{K} w_q C(t_{i,q}) x(t_{i,q}) =  W C_i (\textbf{1}_K \otimes x_{i-1} + \frac{h}{2} (Q \otimes I_n) \dot x_i),
+\end{equation}
+where
+\begin{equation}
+  \begin{aligned}
+    W &= \matrix{w_1 & \dotsc & w_K} \\
+    C_i &= \matrix{C(t_{i,1}) & & 0 \\ & \ddots & \\ 0 & & C(t_{i,K})} \\
+    Q &= \matrix{Q_{1,1} & \cdots & Q_{1,K} \\ \vdots & & \vdots \\ Q_{K,1} & \cdots & Q_{K,K}}.
+  \end{aligned}
+\end{equation}
+Similarly, we have
+\begin{equation}
+  \label{eq:objective-control}
+  \sum_{q=1}^{K} w_q D(t_{i,q}) u(t_{i,q}) =  W D_i (P \otimes I_m) u_i,
+\end{equation}
+where
+\begin{equation}
+  \begin{aligned}
+    D_i &= \matrix{D(t_{i,1}) & & 0 \\ & \ddots & \\ 0 & & D(t_{i,K})} \\
+    P &= \matrix{L_1(r_1) & \cdots & L_K(r_1) \\ \vdots & & \vdots \\ L_1(r_K) & \cdots & L_K(r_K)}.
+  \end{aligned}
+\end{equation}
+
+Taking the terms together, we get the following approximation of the objective functional:
+\begin{equation}
+  \label{eq:objective-gaussian-quadrature-discretized}
+  \begin{aligned}
+    & J(u,x,x_0) \approx \tilde J(z) = \\
+    & \quad \frac{h}{2} \sum_{i=1}^{N} \bigl(W C_i (\textbf{1}_K \otimes x_{i-1} + \frac{h}{2} (Q \otimes I_n) \dot x_i) + W D_i (P \otimes I_m) u_i + W E_i) \bigr) + F x_N,
+  \end{aligned}
+\end{equation}
+where
+\begin{equation}
+  \begin{aligned}
+    E_i &= \matrix{E(t_{i,1}) \\ \vdots \\ E(t_{i,K})}.
+  \end{aligned}
+\end{equation}
+This approximation depends only on the optimization vector $z$ of the discretized problem.
+
+\subsubsection{Discretization of the dynamics}
+\label{sec:discr-dynam}
+
+A collocation scheme is used to enforce the dynamical constraint in \eqref{eq:abstract-oc-problem-fixedtime}, by including the differential equation evaluated at collocation points as constraint:
+\begin{equation}
+  \label{eq:collocation}
+  \dot x(t_{i,q}) = A(t_{i,q}) x(t_{i,q}) + B(t_{i,q}) u(t_{i,q}) + u_0(t_{i,q})
+\end{equation}
+for $i=1,\dotsc,N$ and $q=1,\dotsc,K$.
+
+In the discretized optimization problems, this translates into the constraints
+\begin{equation}
+  \label{eq:collocation-discretized}
+  (P \otimes I_n) \dot x_i = A_i \bigl( (\mathbf{1}_K \otimes x_{i-1}) + \frac{h}{2} (Q \otimes I_n) \dot x_i \bigr)
+  + B_i (P \otimes I_m) u_i + u_{0i},
+\end{equation}
+where
+\begin{equation}
+  \begin{aligned}
+    A_i &= \matrix{A(t_{i,1}) & & 0 \\ & \ddots & \\ 0 & & A(t_{i,K})} \\
+    B_i &= \matrix{B(t_{i,1}) & & 0 \\ & \ddots & \\ 0 & & B(t_{i,K})} \\
+  \end{aligned}
+\end{equation}
+ and
+\begin{equation}
+  \begin{aligned}
+    u_{0i} &= \matrix{u_0(t_{i,1}) \\ \vdots \\ u_0(t_{i,K})}.
+  \end{aligned}
+\end{equation}
+
+Continuity constraints must be added in order to assure that the approximation to the state variable $x(t)$ is continuous at boundaries $t_i$ of the time intervals used in the discretization.
+These constraints are given by
+\begin{equation}
+  \label{eq:continuity-collocation}
+  x_i = x_{i-1} + \frac{h}{2} (Q_0 \otimes I_n) \dot x_i,
+\end{equation}
+where
+\begin{equation}
+  Q_0 = \matrix{\int_{-1}^1 L_1(s) ds & \cdots & \int_{-1}^1 L_K(s) ds}.
+\end{equation}
+
+\subsubsection{Discretization of the path, terminal, and integral constraints}
+\label{sec:discr-path-constr}
+
+The path constraints are approximated by enforcing them at the collocation points only:
+\begin{equation}
+  \label{eq:path-constraints-collocation}
+  G_x(t_{i,q}) x(t_{i,q}) + G_u(t_{i,q}) u(t_{i,q}) + G_k(t_{i,q}) \leq 0
+\end{equation}
+for $i=1,\dotsc,N$ and $q=1,\dotsc,K$.
+In terms of the optimization vector $z$, this is written as
+\begin{equation}
+  \label{eq:path-constraints-discretized}
+  G_x(t_{i,q}) (x_{i-1} + \frac{h}{2} (Q_q \otimes I_n) \dot x_i) + G_u(t_{i,q}) (P_q \otimes I_m) u_i + G_k(t_{i,q}) \leq 0.
+\end{equation}
+
+The terminal constraint is simply written as
+\begin{equation}
+  \label{eq:terminal-constraint-discretized}
+  H_x x_N + H_k \leq 0.
+\end{equation}
+
+The integral constraint in \eqref{eq:abstract-oc-problem-fixedtime} can be approximated in the same way as the objective functional.
+For the discretized optimization problem, this yields the constraint
+\begin{equation}
+  \label{eq:integral-constraint-discretized}
+  \frac{h}{2} \sum_{i=1}^{N} \bigl(W \tilde C_i (\textbf{1}_K \otimes x_{i-1} + \frac{h}{2} (Q \otimes I_n) \dot x_i) + W \tilde D_i (P \otimes I_m) u_i + W \tilde E_i) \bigr) + \tilde F x_N \leq 0.
+\end{equation}
+
+\subsection{Numerical solution of the discretized problem}
+\label{sec:numer-solut-discr}
+
+\subsubsection{Optimization with fixed terminal time}
+\label{sec:optim-with-fixed}
+
+The discretized optimization problem~\eqref{eq:discrete-oc-problem-fixedtime} is simply a linear program (LP), and can be solved with state-of-the-art LP solvers.
+From the resulting optimal vector $z^\ast$, the dynamical solution can be computed by the representations in \eqref{eq:variable-discretization} and \eqref{eq:state-approx}.
+
+Note that the interpolated state and control vectors $x(t)$ and $u(t)$ may violate the path constraints at points different from collocation points.
+Razzaghi \textit{et al.} \cite{RazzaghiNaz1998} seem to have an iterative approach to improve the constraint violation, but how they proceed is not totally clear to me.
+
+\subsubsection{Optimization with free terminal time}
+\label{sec:optim-with-free}
+
+Optimization with free terminal time is much more difficult than with a fixed terminal time in this case.
+The commonly used reparametrization of the system with the terminal time introduces non-linearity in the constraints, thus impeding solution by a linear program.
+
+A special case is a pure minimal (or maximal) time problem, where all parameters in the objective function apart from $E(t)$ are equal to zero.
+Since the objective functional is then monotone in the terminal time, the problem can simply be solved by bisection.
+Depending on whether the linear program~\eqref{eq:discrete-oc-problem-fixedtime} as constructed for a specific terminal time is feasible or not, the bounds on the optimal time are updated by bisection.
+The bisection algorithm terminates when the lower and upper bounds on the optimal value are closer than some prespecified tolerance.
+
+If the objective functional is not monotone, one may try to do scalar optimization over the terminal time, solving the underlying LP~\eqref{eq:discrete-oc-problem-fixedtime} for a fixed time in each iteration.
+I have implemented this approach in linopt.py, but have no good idea how well it will work.
+
+\subsection{Simple examples}
+\label{sec:simple-examples}
+
+\subsubsection{A constrained integrator}
+\label{sec:constr-integr}
+
+We consider the following optimal control problem:
+\begin{equation}
+  \label{eq:constrained integrator}
+  \begin{aligned}
+    \max_{\mathcal U} &\ \int_{0}^{1} x(t) dt \\
+    \textnormal{s.t. } & \dot x(t) = u(t)\\
+    & x(0) = 1 \\
+    & - x(t) +  u(t) \leq 0, \quad 0 \leq t \leq 1.
+  \end{aligned}
+\end{equation}
+
+Clearly, the optimal solution is
+\begin{equation}
+  u^\ast(t) = e^t,
+\end{equation}
+giving rise to the state trajectory
+\begin{equation}
+  x^\ast(t) = e^t.
+\end{equation}
+
+The results of a numerical solution are shown in Figure~\ref{fig:integrator}.
+For the discretization, 10 time intervals have been used, each with two collacation points in a Radau scheme.
+The collocation points are shown as red dots in the plots in Figure~\ref{fig:integrator}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=7cm]{../results/linopt-integrator/opt-control.png}
+  \hspace{1cm}
+  \includegraphics[width=7cm]{../results/linopt-integrator/opt-state.png}
+  \caption{Numerical solution to the constrained integrator problem~\eqref{eq:constrained integrator}.}
+  \label{fig:integrator}
+\end{figure}
+
+\subsubsection{Minimum time control of the rocket car to the origin}
+\label{sec:minimum-time-control}
+
+The second example is the classical ``rocket car'' example.
+The control task is to steer the rocket car to a specific position (here the origin) in a minimum amount of time.
+The problem is formulated as follows:
+\begin{equation}
+  \label{eq:rocketcar}
+  \begin{aligned}
+    \min_{\mathcal U, t_f} &\ \int_{0}^{t_f} 1 dt \\
+    \textnormal{s.t. } & \dot x_1(t) = x_2(t) \\
+    & \dot x_2(t) = u(t) \\
+    & x(0) = (1, 0) \\
+    & -1 \leq u(t) \leq 1, \qquad 0 \leq t \leq t_f \\
+    & x(t_f) = 0.
+  \end{aligned}
+\end{equation}
+
+Note that the equality terminal constraint can be written as the inequality $0 \leq x(t_f) \leq 0$ to get into the framework used in the general problem~\eqref{eq:abstract-oc-problem-fixedtime}.
+
+The classical results show that the optimal solution is of bang-bang type.
+This is also seen in the numerical solution shown in Figure~\ref{fig:rocketcar}.
+Here, 15 time intervals with three Radau collocation points per time interval have been used.
+
+Due to the interpolation, there is a violation of the control constraints around the switching time.
+This seems to be particularly severe here, because the switching time is inside one of the discrete time intervals.
+An alternative discretization where the switching time is at the boundary of the interval yielded a smaller violation of the control constraint.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=7cm]{../results/linopt-rocketcar/opt-control.png}
+  \hspace{1cm}
+  \includegraphics[width=7cm]{../results/linopt-rocketcar/opt-state.png}  
+  \caption{Numerical solution to the rocket car problem~\eqref{eq:rocketcar}.}
+  \label{fig:rocketcar}
+\end{figure}
+
+\subsubsection{A minimal metabolic-genetic network}
+\label{sec:minim-metab-genet}
+
+
+
+% \section{Numerical approaches}
+% \label{sec:numerical-approaches}
+
+% \subsection{Numerical approach to maximal growth}
+% \label{sec:numer-appr-maxim}
+
+% \subsection{Numerical approach to time-optimal fluxes}
+% \label{sec:numer-appr-maxim}
+
+% \section{Examples}
+% \label{sec:examples}
+
+\begin{thebibliography}{1}
+
+\bibitem{RazzaghiNaz1998}
+M.~Razzaghi, J.~Nazarzadeh, and KY~Nikravesh.
+\newblock A collocation method for optimal control of linear systems with
+  inequality constraints.
+\newblock {\em Mathematical Problems in Engineering}, 3(6):503--515, 1998.
+
+\end{thebibliography}
+
+\end{document}
