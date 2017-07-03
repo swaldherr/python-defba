@@ -36,7 +36,10 @@ def filecache(func):
             try:
                 if not memoizeconfig["readcache"] or arghash not in cache:
                     funcres = func(*args, **kwargs)
-                    cache[arghash] = funcres
+                    try:
+                        cache[arghash] = funcres
+                    except pickle.PickleError as e:
+                        print "Warning: %s in memoizing %s, not storing in cache. (%s)" % (type(e).__name__, func.__name__, str(e))
                 else:
                     print "Reading %s results from cache %s ..." % (func.__name__, funchash)
                     funcres = cache[arghash]

@@ -2,7 +2,7 @@
 provides scripttool classes
 """
 # Copyright (C) 2011 Steffen Waldherr waldherr@ist.uni-stuttgart.de
-# Time-stamp: <Last change 2013-05-17 22:20:03 by Steffen Waldherr>
+# Time-stamp: <Last change 2015-11-06 12:18:51 by Steffen Waldherr>
 
 import sys
 import os
@@ -10,6 +10,8 @@ from optparse import OptionParser
 import time
 import shelve
 import copy
+import warnings
+import csv
 
 import plotting
 import memoize
@@ -33,20 +35,45 @@ class Task(object):
     """
     base class for tasks that can be called in a script
     """
-    def __init__(self, out=sys.stdout, taskin=sys.stdin, **kwargs):
+    def __init__(self, out=sys.stdout, taskin=sys.stdin, callback=None, **kwargs):
         """
-        construct a task with output to out, input from input, and
-        optional attributes given as keyword arguments
+        construct a task with output to out, input from input
+        
+        callback is a method to be called before running the tasks, and may be used to modify the task's options.
+        It takes the Task object as an argument.
+        
+        custom attributes are given as keyword arguments
         (keywords must first be defined in class attribute 'customize')
         """
         self.out = out
         self.input = taskin
         self.figures = {}
         try:
-            for p in self.customize:
-                self.__setattr__(p, kwargs[p] if p in kwargs else copy.copy(self.customize[p]))
+            c = self.customize
+            havecustomize = True
         except AttributeError:
-            pass
+            havecustomize = False
+        if havecustomize:
+            for p in self.customize:
+                try:
+                    self.__setattr__(p, kwargs[p] if p in kwargs else copy.copy(c[p]))
+                except AttributeError:
+                    warnings.warn("Cannot copy attribute '%s' in task %s, using reference assignment instead." % (p,type(self)))
+                    self.__setattr__(p, kwargs[p] if p in kwargs else c[p])
+        self.setup_callback = callback
+
+    def run(self):
+        """
+        Abstract method to run this task.
+        """
+        pass
+
+    def setup(self):
+        """
+        Is called by scripttool before actually running the task, to setup customization options etc.
+        """
+        if callable(self.setup_callback):
+            self.setup_callback(self)
 
     def run_subtask(self, task):
         """
@@ -56,6 +83,7 @@ class Task(object):
         task.input = self.input
         task.figures = self.figures # store figures in this task's dict
         task._ident = self._ident
+        task.setup()
         task.run()
 
     def get_doc(self):
@@ -116,6 +144,23 @@ class Task(object):
         except AttributeError:
             return os.path.join(scriptconfig["output_dir"], self.__class__.__name__)
 
+    def csv_export(self, filename, data, headers=None, delimiter="\t"):
+        """
+        Export 'data' as csv file to 'filename', using strings in list 'headers' as column titles.
+
+        The output directory is automatically prepended to the filename.
+
+        To save data from individual vectors a1, a2, ... per column, use
+            data = np.vstack((a1, a2, ...)).T
+        """
+        resfile = open(os.path.join(self.get_output_dir(), filename), "w")
+        reswriter = csv.writer(resfile, delimiter=delimiter)
+        if headers is not None:
+            reswriter.writerow(headers)
+        for i in range(data.shape[0]):
+            reswriter.writerow(data[i])
+        resfile.close()
+
     def store(self, *args):
         """
         Shelve args in '<ident>.db'.
@@ -128,17 +173,22 @@ class Task(object):
 	db[name] = args
 	db.close()
 
-    def printf(self, string, indent=0):
+    def printf(self, string, indent=0, format=True):
         """
         print string to script's output stream, format using dict of task attributes
         adding 'indent' levels of indentation
+
+        Use format=False to prevent formatting of the string with it's customization options.
 
         Example:
         >>> task.variable = 5
         >>> task.printf("Variable is: %(variable)d")
         Variable is: 5
         """
-        self.out.write((" "*indent + string + "\n") % self.__dict__)
+        if format:
+            self.out.write((" "*indent + string + "\n").format(self.__dict__))
+        else:
+            self.out.write(" "*indent + string + "\n")
 
     def log_start(self):
         """
@@ -150,10 +200,13 @@ class Task(object):
             self.printf("Task: %s" % self.__class__.__name__)
         self.printf("Program call: %s" % " ".join(sys.argv))
         self.printf("Start time: %s." % time.strftime("%Y-%m-%d %H:%M:%S" + ("%+.2d:00" % (-time.timezone/3600))))
-        self.printf("Options:")
+        if callable(self.setup_callback):
+            self.printf("Options (from setup callback):")
+        else:
+            self.printf("Options:")
         try:
             for p in self.customize:
-                self.printf("    %s = %s" % (p, self.__dict__[p]))
+                self.printf("    %s = %s" % (p, self.__dict__[p]), format=False)
         except AttributeError:
             self.printf("    None found.")
         self.printf("-----------------------------------------------")
@@ -213,6 +266,7 @@ def run(options=None, tasks=None):
         elif isinstance(i, type):
             i = i.__name__
         task = tasklist[i]
+        task.setup()
         # make sure that taks-specific output_dir exists
         ensure_output_dir() # for global output_dir
         try:
@@ -272,7 +326,7 @@ def main():
     elif options.task is None:
         optparser.error("Either --all or --task option must be used.")
     else:
-        tasks = [os.path.basename(options.task).split(".")[0]]
+        tasks = [os.path.splitext(os.path.basename(options.task))[0]]
     for i in tasklist.values():
         i.options = options
         i.args = args
