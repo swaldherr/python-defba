@@ -53,5 +53,12 @@ tasks. These are contained in the files ``tasks/*.py``.  Tasks are defined as
 subclasses of ``scripttool.Task``.  For each task, there is a ``run()`` method
 which contains the code that is executed for the task.
 
+References
+----------
+
+If you are using this code for a research publication, please cite the following paper:
+
+Waldherr, S.; Oyarzún, D. A.; & Bockmayr, A. (2015). Dynamic optimization of metabolic networks coupled with gene expression. Journal of Theoretical Biology, 365, 469–485.
+
 
 
